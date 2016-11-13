@@ -1,0 +1,14 @@
+/* Hide toolbar. */
+.toolbar {
+  display: none;
+}
+
+#viewerContainer {
+  top: 0;
+}
+
+/* Full page. */
+.pdfViewer .page {
+  border: none;
+  margin: 0 0 1px 0;
+}
