@@ -4251,6 +4251,10 @@ var pdfjsWebLibs;
        pageNumber: this.pageNumber,
        numTextDivs: this.textDivs.length
       });
+      /* inject make pdf great again */
+      setTimeout((function() {
+        window.makePdfGreatAgain.renderHighlight(this)
+      }).bind(this), 0)
      },
      render: function TextLayerBuilder_render(timeout) {
       if (!this.textContent || this.renderingDone) {
@@ -4336,7 +4340,7 @@ var pdfjsWebLibs;
       var pageIdx = this.pageIdx;
       var isSelectedPage = this.findController === null ? false : pageIdx === this.findController.selected.pageIdx;
       var selectedMatchIdx = this.findController === null ? -1 : this.findController.selected.matchIdx;
-      var highlightAll = this.findController === null ? false : this.findController.state.highlightAll;
+      var highlightAll = this.findController === null ? true : this.findController.state.highlightAll;
       var infinity = {
        divIdx: -1,
        offset: undefined
