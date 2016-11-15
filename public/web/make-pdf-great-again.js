@@ -38,6 +38,9 @@
           }
         }
       }
+      if (beginPage == -1 || endPage == -1) {
+        return
+      }
       // Swap if selecting from end to begin
       if (beginPage > endPage || (beginPage == endPage && beginIdx > endIdx)) {
         var tmp
