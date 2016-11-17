@@ -2,3 +2,5 @@
 make-pdf-great-again-server
 # log
 server.log
+# pdf
+public/pdf/*.pdf
