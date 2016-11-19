@@ -1,13 +1,16 @@
-'use strict';
+'0use strict';
 
 (function (global) {
   global.makePdfGreatAgain = {
     textLayerBuilders: [],
     matches: [],
+    filename: global.location.search.split('/')[4],
     // Render highlight in the pdf controller
     renderHighlight: function renderHighlight(textLayerBuilder) {
       textLayerBuilder.findController = null
-      textLayerBuilder.renderMatches(this.matches[textLayerBuilder.pageIdx] || [])
+      this.matches[textLayerBuilder.pageIdx] = this.matches[textLayerBuilder.pageIdx] || []
+      textLayerBuilder.renderMatches(this.matches[textLayerBuilder.pageIdx])
+      this.matches[textLayerBuilder.pageIdx] = []
       this.textLayerBuilders[textLayerBuilder.pageIdx] = textLayerBuilder
     },
     rerenderAllHighlight: function rerenderAllHighlight() {
@@ -24,6 +27,7 @@
       var endTextDiv = selection.focusNode.parentNode
       var beginPage = -1, endPage = -1, beginIdx = -1, endIdx = -1
       var beginOffset = selection.anchorOffset, endOffset = selection.focusOffset
+      var hs
       // Find begin page and div
       for (var i = 0; i < this.textLayerBuilders.length; ++i) {
         if (!this.textLayerBuilders[i]) {
@@ -41,8 +45,11 @@
       if (beginPage == -1 || endPage == -1) {
         return
       }
+      console.log(beginPage, beginIdx, beginOffset)
+      console.log(endPage, endIdx, endOffset)
       // Swap if selecting from end to begin
-      if (beginPage > endPage || (beginPage == endPage && beginIdx > endIdx)) {
+      if (beginPage > endPage || (beginPage == endPage && beginIdx > endIdx) ||
+        (beginPage == endPage && beginIdx == endIdx && beginOffset > endOffset)) {
         var tmp
         tmp = beginPage; beginPage = endPage; endPage = tmp
         tmp = beginIdx; beginIdx = endIdx; endIdx = tmp
@@ -52,26 +59,63 @@
       this.matches[endPage] = this.matches[endPage] || []
       // In the same page
       if (beginPage == endPage) {
-        this.matches[beginPage].push({
+        hs = [{
+          page: beginPage,
           begin: { divIdx: beginIdx, offset: beginOffset },
           end: { divIdx: endIdx, offset: endOffset },
-        })
+        }]
       } else {
-        this.matches[beginPage].push({
+        hs = [{
+          page: beginPage,
           begin: { divIdx: beginIdx, offset: beginOffset },
           end: {
             divIdx: this.textLayerBuilders[beginPage].textDivs.length - 1,
             offset: Infinity,
           },
-        })
-        this.matches[endPage].push({
+        }, {
+          page: endPage,
           begin: { divIdx: 0, offset: 0 },
           end: { divIdx: endIdx, offset: endOffset },
-        })
+        }]
       }
       selection.empty()
-      // render
-      return this.rerenderAllHighlight()
-    }
+      return this.makeHighlight(hs)
+    },
+    startWSConnection: function startWSConnection() {
+      var ctx = this
+      var location = global.location
+      var uri = 'ws:'
+      if (location.protocol === 'https:') {
+        uri = 'wss:'
+      }
+      uri += '//' + location.host + '/watch/' + ctx.filename
+      ctx.ws = new WebSocket(uri)
+      ctx.ws.onopen = function () {
+        console.log('WS Connected: ' + ctx.filename)
+      }
+      ctx.ws.onmessage = function (e) {
+        var hs = JSON.parse(e.data), page = -1
+        for (var i = 0; i < hs.length; ++i) {
+          page = hs[i].page
+          ctx.matches[page] = ctx.matches[page] || []
+          ctx.matches[page].push(hs[i])
+        }
+        ctx.rerenderAllHighlight()
+      }
+    },
+    makeHighlight: function makeHighlight(hs) {
+      console.log(this.filename)
+      for (var i = 0; i < hs.length; ++i) {
+        global.fetch('/highlight/' + this.filename, {
+          method: 'POST',
+          body: JSON.stringify(hs[i]),
+          headers: new Headers({
+            'Content-Type': 'application/json',
+          })
+        })
+      }
+    },
   }
+  // Start websocket
+  global.makePdfGreatAgain.startWSConnection()
 })(window)

@@ -10,5 +10,9 @@
 /* Full page. */
 .pdfViewer .page {
   border: none;
-  margin: 0 0 1px 0;
+  margin: 0 auto 1px auto;
+}
+
+.textLayer .highlight {
+  background-color: rgb(255, 255, 0);
 }

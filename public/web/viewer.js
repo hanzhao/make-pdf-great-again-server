@@ -5340,6 +5340,7 @@ var pdfjsWebLibs;
     externalServices: DefaultExernalServices,
     hasPageLabels: false,
     initialize: function pdfViewInitialize(appConfig) {
+     window.pdfViewerApplication = this
      configure(pdfjsLib.PDFJS);
      this.appConfig = appConfig;
      var eventBus = appConfig.eventBus || getGlobalEventBus();
