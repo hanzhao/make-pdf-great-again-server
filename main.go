@@ -90,6 +90,7 @@ func validHandler(c echo.Context) error {
 	})
 }
 
+// WebSocket handler, for watching highlights in a PDF file.
 func wsHandler(c echo.Context) error {
 	name := c.Param("name")
 
@@ -132,6 +133,7 @@ func wsHandler(c echo.Context) error {
 	return nil
 }
 
+// Add a highlight to the PDF file.
 func highlightHandler(c echo.Context) error {
 	name := c.Param("name")
 
@@ -174,6 +176,7 @@ func highlightHandler(c echo.Context) error {
 	}
 }
 
+// Add a note to PDF file.
 func addNoteHandler(c echo.Context) error {
 	name := c.Param("name")
 
@@ -203,6 +206,7 @@ func addNoteHandler(c echo.Context) error {
 	return nil
 }
 
+// Get notes of current PDF file.
 func getNotesHandler(c echo.Context) error {
 	name := c.Param("name")
 
@@ -218,23 +222,33 @@ func getNotesHandler(c echo.Context) error {
 	return nil
 }
 
+// Main.
 func main() {
 	redisClient = redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	})
 
 	e := echo.New()
+	// Open logs.
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	// Statics.
 	e.Static("/", "public")
+	// Upload PDF file.
 	e.POST("/upload/:name", uploadHandler)
+	// Check if the PDF file exists.
 	e.GET("/valid/:name", validHandler)
+	// Get updated highlights of PDF file.
 	e.GET("/watch/:name", wsHandler)
+	// Add a highlight.
 	e.POST("/highlight/:name", highlightHandler)
+	// Add a note.
 	e.POST("/note/:name", addNoteHandler)
+	// Get notes.
 	e.GET("/note/:name", getNotesHandler)
 
-	if err := e.Start(":8080"); err != nil {
+	if err := e.Start(":80"); err != nil {
 		e.Logger.Fatal(err.Error())
 	}
 }

@@ -1,5 +1,6 @@
 '0use strict';
 
+// This script file is used for injecting our code to PDF.js viewer.
 (function (global) {
   global.makePdfGreatAgain = {
     textLayerBuilders: [],
@@ -13,6 +14,7 @@
       this.matches[textLayerBuilder.pageIdx] = []
       this.textLayerBuilders[textLayerBuilder.pageIdx] = textLayerBuilder
     },
+    // Rerender all highlights of PDF file.
     rerenderAllHighlight: function rerenderAllHighlight() {
       for (var i = 0; i < this.textLayerBuilders.length; ++i) {
         if (!this.textLayerBuilders[i]) {
@@ -21,6 +23,7 @@
         this.renderHighlight(this.textLayerBuilders[i])
       }
     },
+    // Highlight current selection.
     highlightSelection: function highlightSelection() {
       var selection = global.getSelection()
       var beginTextDiv = selection.anchorNode.parentNode
@@ -45,8 +48,6 @@
       if (beginPage == -1 || endPage == -1) {
         return
       }
-      console.log(beginPage, beginIdx, beginOffset)
-      console.log(endPage, endIdx, endOffset)
       // Swap if selecting from end to begin
       if (beginPage > endPage || (beginPage == endPage && beginIdx > endIdx) ||
         (beginPage == endPage && beginIdx == endIdx && beginOffset > endOffset)) {
@@ -65,12 +66,13 @@
           end: { divIdx: endIdx, offset: endOffset },
         }]
       } else {
+        // In different page, change to two highlight.
         hs = [{
           page: beginPage,
           begin: { divIdx: beginIdx, offset: beginOffset },
           end: {
             divIdx: this.textLayerBuilders[beginPage].textDivs.length - 1,
-            offset: Infinity,
+            offset: 99999999,
           },
         }, {
           page: endPage,
@@ -81,6 +83,7 @@
       selection.empty()
       return this.makeHighlight(hs)
     },
+    // Use a websocket to watching highlights of the PDF file.
     startWSConnection: function startWSConnection() {
       var ctx = this
       var location = global.location
@@ -103,6 +106,7 @@
         ctx.rerenderAllHighlight()
       }
     },
+    // Connnet server to make a new highlight.
     makeHighlight: function makeHighlight(hs) {
       console.log(this.filename)
       for (var i = 0; i < hs.length; ++i) {
